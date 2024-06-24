@@ -378,37 +378,48 @@ app.delete('/delete-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
       res.send(result);
     });
 
-    app.get("/popular-instructors", async (req, res) => {
+ 
+  
+    app.get('/popular-instructors', async (req, res) => {
       const pipeline = [
-        {
-          $group: {
-            _id: "$instructorEmail",
-            totalEnrolled: { $sum: "$totalEnrolled" },
+          {
+              $group: {
+                  _id: "$instructorEmail",
+                  totalEnrolled: { $sum: "$totalEnrolled" },
+              }
           },
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "_id",
-            foreignField: "email",
-            as: "instructor",
+          
+          {
+              $lookup: {
+                  from: "users",
+                  localField: "_id",
+                  foreignField: "email",
+                  as: "instructor"
+              }
           },
-        },
-        {
-          $project: {
-            _id: 0,
-            instructor: { $arrayElemAt: ["$instructor", 0] },
-            totalEnrolled: 1,
+          {
+              $project: {
+                  _id: 0,
+                  instructor: {
+                      $arrayElemAt: ["$instructor", 0]
+                  },
+                  totalEnrolled: 1
+              }
           },
-        },
-        {
-          $sort: { totalEnrolled: -1 },
-        },
-        { $limit: 6 },
-      ];
+          {
+              $sort: {
+                  totalEnrolled: -1
+              }
+          },
+          {
+              $limit: 6
+          }
+      ]
       const result = await classesCollection.aggregate(pipeline).toArray();
       res.send(result);
-    });
+
+  })
+
 
     app.get("/admin-stats",verifyJWT, verifyAdmin, async (req, res) => {
       const approvedClasses = await classesCollection.countDocuments({
