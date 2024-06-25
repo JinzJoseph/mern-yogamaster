@@ -97,7 +97,9 @@ const verifyInstructor=async(req,res,next)=>{
       const token = jwt.sign(user, process.env.ACCESS_SECRET, {
         expiresIn: "24h",
       });
-      res.send(token);
+      res.json({
+        "token":token
+      })
     });
 
     // Get all users registered in the application
