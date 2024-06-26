@@ -1,10 +1,8 @@
 import React, { useContext, useEffect, useState } from "react";
 import useAxiosFetch from "../../hooks/useAxiosFetch";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Transition } from "@headlessui/react";
-import AuthProvider, {
-  AuthContext,
-} from "../../utilities/Providers/AuthProvider";
+import AuthProvider from "../../utilities/Providers/AuthProvider";
 import useUser from "../../hooks/useUser";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
 import { ToastContainer, toast } from "react-toastify";
@@ -26,44 +24,40 @@ const Classes = () => {
   //handel add to cart
 
   const handleSelect = (id) => {
+    console.log(id);
     axiosSecure
       .get(`/enrolled-classes/${currentUser?.email}`)
-      .then((data) => setenrolledclasses(data.data))
-      .catch((error) => console.log(error));
-
+      .then((res) => {
+        console.log(res);
+        setenrolledclasses(res.data)
+        console.log("fghj kl;");
+      })
+      .catch((err) => console.log(err));
     if (!currentUser) {
-      return toast.error("Please Login first!");
+      alert("please login First..");
+      return navigate("/");
     }
     axiosSecure
       .get(`/cart-items/${id}?email=${currentUser.email}`)
       .then((res) => {
+        console.log(res);
         if (res.data.classId === id) {
-          return toast.error("Already in your cart!");
+          return alert("Already added to the cart");
         } else if (enrolledclasses.find((item) => item.classes._id === id)) {
-          return toast.error("Already enrolled");
+          return alert("Already Enrolled");
         } else {
           const data = {
             classId: id,
-            userMail: currentUser.email,
+            userEmail: currentUser?.email,
             date: new Date(),
           };
-          toast.promise(axiosSecure.post("/add-to-cart", data)).then((res) => {
+          axiosSecure.post("/add-to-cart", data).then((res) => {
+            alert("Add to cart successfully");
             console.log(res.data);
-          }),{
-            pending:"selecteg...",
-            success:{
-              render(data){
-                return " selected successfully"
-              }
-            },
-            error:{
-              render(data){
-                return ` Error: ${data.message}`
-              }
-            }
-          }
+          });
         }
-      });
+      })
+      .catch((error) => console.error(error));
   };
 
   const handleHover = (index) => {
@@ -73,7 +67,7 @@ const Classes = () => {
   const handleMouseLeave = () => {
     setHoveredCard(null);
   };
-  const { user } = useContext(AuthContext);
+  // const { user } = useContext(AuthContext);
 
   return (
     <div>
@@ -114,7 +108,7 @@ const Classes = () => {
                 >
                   <div className="absolute inset-0 flex items-center justify-center">
                     <button
-                      onClick={() => handleSelect(cls._id)}
+                      onClick={() => handleSelect(cls?._id)}
                       className="px-4 py-2 text-white disabled:bg-red-300 bg-secondary duration-300 rounded hover:bg-red-700"
                       title={
                         role === "admin" || role === " instructor"

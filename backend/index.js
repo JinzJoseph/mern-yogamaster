@@ -25,14 +25,18 @@ const client = new MongoClient(uri, {
   },
 });
 const verifyJWT = async (req, res, next) => {
+  console.log(req.headers.authorization);
   const authorization = req.headers.authorization;
+// console.log("authorization   "  +authorization);
+
   if (!authorization) {
-    return res.status(401).send({
+    return res.status(401).send({ 
       error: true,
-      message: "Unauthorize access",
+      message: "Unauthorize access1",
     });
   }
   const token = authorization?.split(" ")[1];
+  // console.log("token   "  +token);
   jwt.verify(token, process.env.ACCESS_SECRET, (err, decoded) => {
     if (err) {
       return res
@@ -57,14 +61,15 @@ async function run() {
     //middleware
 
     const verifyAdmin = async (req, res, next) => {
-      const email=req.decoded.email;
-      const query={email:email};
-      const user=await userCollection.findOne(query)
-      if(user.role==="admin"){
-        next()
-      }
-      else{
-        return res.status(401).send({ error: true, message: 'Unauthorize access' })
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      if (user.role === "admin") {
+        next();
+      } else {
+        return res
+          .status(401)
+          .send({ error: true, message: "Unauthorize access" });
       }
     };
     // Creating new user
@@ -76,21 +81,21 @@ async function run() {
         data: result,
       });
     });
-// verify instructor
+    // verify instructor
 
-const verifyInstructor=async(req,res,next)=>{
-  const email=req.decoded.email;
-  const query={email:email}
-  const user=await userCollection.findOne(query)
-  if(user.role==="instructor" || user.role==="admin"){
-    next()
-  }else{
-    res.status(200).json({
-      message: "Successfully created user",
-      data: result,
-    }); 
-  }
-}
+    const verifyInstructor = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      if (user.role === "instructor" || user.role === "admin") {
+        next();
+      } else {
+        res.status(200).json({
+          message: "Successfully created user",
+          data: result,
+        });
+      }
+    };
     // Setting token for login users
     app.post("/api/set-token", async (req, res) => {
       const user = req.body;
@@ -98,8 +103,8 @@ const verifyInstructor=async(req,res,next)=>{
         expiresIn: "24h",
       });
       res.json({
-        "token":token
-      })
+        token: token,
+      });
     });
 
     // Get all users registered in the application
@@ -117,7 +122,7 @@ const verifyInstructor=async(req,res,next)=>{
     });
 
     // Get single user by email ID
-    app.get("/user/:email", verifyJWT,async (req, res) => {
+    app.get("/user/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const user = await userCollection.findOne(query);
@@ -131,15 +136,15 @@ const verifyInstructor=async(req,res,next)=>{
       const result = await userCollection.deleteOne(query);
       res.send(result);
     });
-// delete user
-app.delete('/delete-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
-  const id = req.params.id;
-  const query = { _id: new ObjectId(id) };
-  const result = await userCollection.deleteOne(query);
-  res.send(result);
-})
+    // delete user
+    app.delete("/delete-user/:id", verifyJWT, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await userCollection.deleteOne(query);
+      res.send(result);
+    });
     // Update user by ID
-    app.put("/update-user/:id",verifyJWT, verifyAdmin, async (req, res) => {
+    app.put("/update-user/:id", verifyJWT, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updateDoc = req.body;
@@ -164,19 +169,24 @@ app.delete('/delete-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
     });
 
     // Creating a new class
-    app.post("/new-class", verifyJWT, verifyInstructor,async (req, res) => {
+    app.post("/new-class", verifyJWT, verifyInstructor, async (req, res) => {
       const newClass = req.body;
       const createdClass = await classesCollection.insertOne(newClass);
       res.send(createdClass);
     });
 
     // Get all classes added by instructor
-    app.get("/classes/:email",verifyJWT, verifyInstructor, async (req, res) => {
-      const email = req.params.email;
-      const query = { instructorEmail: email };
-      const instructorClasses = await classesCollection.find(query).toArray();
-      res.send(instructorClasses);
-    });
+    app.get(
+      "/classes/:email",
+      verifyJWT,
+      verifyInstructor,
+      async (req, res) => {
+        const email = req.params.email;
+        const query = { instructorEmail: email };
+        const instructorClasses = await classesCollection.find(query).toArray();
+        res.send(instructorClasses);
+      }
+    );
 
     // Get all approved classes
     app.get("/getallclasses", async (req, res) => {
@@ -192,7 +202,7 @@ app.delete('/delete-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
     });
 
     // Change the status of class (for admin purpose)
-    app.put("/change-status/:id",verifyJWT, verifyAdmin,async (req, res) => {
+    app.put("/change-status/:id", verifyJWT, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const options = { upsert: true };
@@ -213,28 +223,33 @@ app.delete('/delete-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
     });
 
     // Update a class
-    app.put("/change-class/:id",verifyJWT, verifyInstructor, async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: new ObjectId(id) };
-      const options = { upsert: true };
-      const updateDoc = req.body;
-      const updatedDoc = {
-        $set: {
-          name: updateDoc.name,
-          description: updateDoc.description,
-          price: updateDoc.price,
-          availableSeats: updateDoc.availableSeats,
-          videoLink: updateDoc.videoLink,
-          status: "pending",
-        },
-      };
-      const result = await classesCollection.updateOne(
-        filter,
-        updatedDoc,
-        options
-      );
-      res.send(result);
-    });
+    app.put(
+      "/change-class/:id",
+      verifyJWT,
+      verifyInstructor,
+      async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const options = { upsert: true };
+        const updateDoc = req.body;
+        const updatedDoc = {
+          $set: {
+            name: updateDoc.name,
+            description: updateDoc.description,
+            price: updateDoc.price,
+            availableSeats: updateDoc.availableSeats,
+            videoLink: updateDoc.videoLink,
+            status: "pending",
+          },
+        };
+        const result = await classesCollection.updateOne(
+          filter,
+          updatedDoc,
+          options
+        );
+        res.send(result);
+      }
+    );
 
     // Get single class for details page
     app.get("/classes/id/:id", async (req, res) => {
@@ -252,28 +267,32 @@ app.delete('/delete-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
     });
 
     // Adding items to the cart
-    app.post("/add-to-cart",verifyJWT, async (req, res) => {
+    app.post("/add-to-cart", verifyJWT, async (req, res) => {
       const cartItems = req.body;
       const result = await cartCollection.insertOne(cartItems);
       res.send(result);
     });
 
     // Checking the classes which are already enrolled by the user
-    app.get("/cart-items/:id", verifyJWT,async (req, res) => {
+    app.get("/cart-items/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
-      console.log(id);
       const email = req.query.email;
-      console.log(email);
-      const query = { classId: id, email: email };
-      const projection = { projection: { classId: 1 } };
-      const result = await cartCollection.findOne(query, {
-        projection: projection,
-      });
-      res.send(result);
+
+      const query = { classId: id, userEmail: email };
+      const projection = { classId: 1 };
+    
+      try {
+        const result = await cartCollection.findOne(query, { projection });
+     console.log(result);
+        res.send(result);
+      } catch (error) {
+        console.error('Error retrieving cart item:', error);
+        res.status(500).send({ message: 'Error retrieving cart item' });
+      }
     });
 
     // Get cart of specified email of user
-    app.get("/cart/:email", verifyJWT,async (req, res) => {
+    app.get("/cart/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       console.log(email);
       const query = { email: email };
@@ -286,7 +305,7 @@ app.delete('/delete-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
     });
 
     // Delete cart items
-    app.delete("/delete-cart-items/:id",verifyJWT, async (req, res) => {
+    app.delete("/delete-cart-items/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await cartCollection.deleteOne(query);
@@ -294,7 +313,7 @@ app.delete('/delete-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
     });
 
     // Create payment intent
-    app.post("/create-payment-intent",verifyJWT, async (req, res) => {
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
       const { price } = req.body;
       const amount = parseInt(price) * 100;
       const paymentIntent = await stripe.paymentIntents.create({
@@ -308,7 +327,7 @@ app.delete('/delete-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
     });
 
     // Payment info
-    app.post("/payment-info",verifyJWT, async (req, res) => {
+    app.post("/payment-info", verifyJWT, async (req, res) => {
       const paymentInfo = req.body;
       const classesId = paymentInfo.classesId.map((id) => new ObjectId(id));
       const userEmail = paymentInfo.userEmail;
@@ -380,50 +399,46 @@ app.delete('/delete-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
       res.send(result);
     });
 
- 
-  
-    app.get('/popular-instructors', async (req, res) => {
+    app.get("/popular-instructors", async (req, res) => {
       const pipeline = [
-          {
-              $group: {
-                  _id: "$instructorEmail",
-                  totalEnrolled: { $sum: "$totalEnrolled" },
-              }
+        {
+          $group: {
+            _id: "$instructorEmail",
+            totalEnrolled: { $sum: "$totalEnrolled" },
           },
-          
-          {
-              $lookup: {
-                  from: "users",
-                  localField: "_id",
-                  foreignField: "email",
-                  as: "instructor"
-              }
+        },
+
+        {
+          $lookup: {
+            from: "users",
+            localField: "_id",
+            foreignField: "email",
+            as: "instructor",
           },
-          {
-              $project: {
-                  _id: 0,
-                  instructor: {
-                      $arrayElemAt: ["$instructor", 0]
-                  },
-                  totalEnrolled: 1
-              }
+        },
+        {
+          $project: {
+            _id: 0,
+            instructor: {
+              $arrayElemAt: ["$instructor", 0],
+            },
+            totalEnrolled: 1,
           },
-          {
-              $sort: {
-                  totalEnrolled: -1
-              }
+        },
+        {
+          $sort: {
+            totalEnrolled: -1,
           },
-          {
-              $limit: 6
-          }
-      ]
+        },
+        {
+          $limit: 6,
+        },
+      ];
       const result = await classesCollection.aggregate(pipeline).toArray();
       res.send(result);
+    });
 
-  })
-
-
-    app.get("/admin-stats",verifyJWT, verifyAdmin, async (req, res) => {
+    app.get("/admin-stats", verifyJWT, verifyAdmin, async (req, res) => {
       const approvedClasses = await classesCollection.countDocuments({
         status: "approved",
       });
@@ -446,44 +461,50 @@ app.delete('/delete-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
       res.send(result);
     });
 
-    app.get("/enrolled-classes/:email", verifyJWT,async (req, res) => {
+    app.get('/enrolled-classes/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
       const query = { userEmail: email };
+    
       const pipeline = [
         {
-          $match: query,
+          $match: query
         },
         {
           $lookup: {
             from: "classes",
-            localField: "classesId",
+            localField: "classId", // Corrected to match your schema
             foreignField: "_id",
-            as: "classes",
-          },
+            as: "classes"
+          }
         },
         {
-          $unwind: "$classes",
+          $unwind: "$classes"
         },
         {
           $lookup: {
             from: "users",
             localField: "classes.instructorEmail",
             foreignField: "email",
-            as: "instructor",
-          },
+            as: "instructor"
+          }
         },
         {
           $project: {
             _id: 0,
             classes: 1,
-            instructor: { $arrayElemAt: ["$instructor", 0] },
-          },
-        },
+            instructor: { $arrayElemAt: ["$instructor", 0] }
+          }
+        }
       ];
-      const result = await enrolledCollection.aggregate(pipeline).toArray();
-      res.send(result);
+    
+      try {
+        const result = await enrolledCollection.aggregate(pipeline).toArray();
+        res.json(result);
+      } catch (error) {
+        console.error("Error fetching enrolled classes:", error);
+        res.status(500).json({ error: "Failed to fetch enrolled classes" });
+      }
     });
-
     // Applied route
     app.post("/as-instructor", async (req, res) => {
       const data = req.body;

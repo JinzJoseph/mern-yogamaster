@@ -7,19 +7,19 @@ const PopularInstructor = () => {
   useEffect(() => {
     const fetchInstructor = async () => {
       const res = await axiosFetch.get("/popular-instructors");
-      console.log(res);
+      console.log(res.data);
       setinstructors(res.data);
     };
     fetchInstructor();
   }, []);
   return (
-    <div >
+    <div>
       <div className="md:w-[80%] mx-auto my-36">
         <h1 className="text-5xl font-bold text-center dark:text-white">
           Our <span className="text-secondary">Best</span> Instructor's
         </h1>
         <div className="w-[40%] text-center mx-auto my-4">
-          <p className="text-grey-500 dark:text-white" >
+          <p className="text-grey-500 dark:text-white">
             Explore our popular Instructor.Here is some popular Instructor based
             on How many student enrolled
           </p>
@@ -38,6 +38,7 @@ const PopularInstructor = () => {
                   <img
                     className="rounded-full border-4 border-gray-300 h-24 w-24 mx-auto"
                     src={instructor?.instructor?.photoUrl || `${img}`}
+                    alt="instructor image"
                   />
                   <div className="flex flex-col items-center flex-wrap">
                     <p className="font-medium text-lg dark:text-white text-gray-800">

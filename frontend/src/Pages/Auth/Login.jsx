@@ -19,11 +19,11 @@ const Login = () => {
 
     try {
       await login(email, password);
-      navigate("/dashboard");
+      alert("Login Successfull");
+      navigate("/");
     } catch (err) {
-        console.log(err.message);
+      console.log(err.message);
       setErr(err.message);
-      
     }
   };
 

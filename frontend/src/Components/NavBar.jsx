@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { ThemeProvider, THEME_ID, createTheme } from "@mui/material/styles";
 import { Switch, duration } from "@mui/material";
 import photoUrl from "../assets/home/girl.jpg";
 import { FaBars } from "react-icons/fa";
 import {motion} from "framer-motion"
+import useAuth from "../hooks/useAuth";
+import { AuthContext } from "../utilities/Providers/AuthProvider";
+import useUser from "../hooks/useUser";
 const NavBar = () => {
   const navLinks = [
     {
@@ -39,16 +42,18 @@ const NavBar = () => {
   });
   const navigate = useNavigate();
   const location = useLocation();
+  const { currentUser } = useUser();
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isHome, setIsHome] = useState(false);
   const [scrollposition, setScrollposition] = useState(0);
   const [isFixed, SetIsFixed] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLogin, setIsLogin] = useState(false);
-  const [user, setUser] = useState(true);
+  // const [user, setUser] = useState(true);
   const toggleMobileMenu = () => {
     setMobileMenuOpen(true);
   };
+  const {logout}=useContext(AuthContext)
   useEffect(() => {
     const darkClass = "dark";
     const root = window.document.documentElement;
@@ -92,7 +97,10 @@ const NavBar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-  const handleLogut = () => {};
+  const handleLogout = async() => {
+   await logout()
+  };
+
   return (
     <motion 
     initial={{opacity:0}}
@@ -147,7 +155,7 @@ const NavBar = () => {
                   </li>
                 ))}
                 {/* based on user    */}
-                {user ? null : isLogin ? (
+                {currentUser ? null : isLogin ? (
                   <li>
                     <NavLink
                       className={({ isActive }) =>
@@ -175,7 +183,7 @@ const NavBar = () => {
                             : navBg.includes("bg-transparent")
                             ? "text-white"
                             : "text-black dark:text-white"
-                        } hover:text-secondary duration-300 `
+                        } hover:text-secondary duration-300  px-3 py-2 bg-secondary rounded-lg hover:bg-blue-200 text-black`
                       }
                       to="/login"
                     >
@@ -184,7 +192,7 @@ const NavBar = () => {
                     </NavLink>
                   </li>
                 )}
-                {user && (
+                {currentUser && (
                   <li>
                     <NavLink
                       to={"/dashboard"}
@@ -202,22 +210,22 @@ const NavBar = () => {
                     </NavLink>
                   </li>
                 )}
-                {user && (
+                {currentUser && (
                   <li>
                     <img
-                      src={user?.photoUrl || photoUrl}
+                      src={currentUser?.photoUrl || photoUrl}
                       alt="profile img"
                       className="h-[40px] rounded-full w-[40px]"
                     />
                   </li>
                 )}
-                {user && (
+                {currentUser && (
                   <li>
                     <NavLink
                       className={
                         "font-bold px-3 py-2 bg-secondary text-white rounded-lg"
                       }
-                      onClick={handleLogut}
+                      onClick={handleLogout}
                     >
                       Logout
                     </NavLink>

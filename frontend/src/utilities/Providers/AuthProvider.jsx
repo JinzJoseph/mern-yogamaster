@@ -97,7 +97,7 @@ const AuthProvider = ({ children }) => {
           .post("http://localhost:3000/api/set-token", {
             email: user.email,
             name: user.displayName,
-            photoUrl: user.photoUrl,
+            photoUrl: user.photoURL,
           })
           .then((data) => {
           
