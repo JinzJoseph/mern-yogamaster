@@ -7,6 +7,9 @@ import Login from "../Pages/Auth/Login";
 import Register from "../Pages/Auth/Register";
 import ClassesDetails from "../Pages/Classes/ClassesDetails";
 import axios from "axios";
+import DashBoardLatout from "../Layout/DashBoardLatout";
+import DashBoard from "../Pages/DashBoard/DashBoard";
+import StudentCp from "../Pages/DashBoard/Student/StudentCp";
 
 export const router = createBrowserRouter([
   {
@@ -45,4 +48,19 @@ export const router = createBrowserRouter([
       }
     ],
   },
+  {
+    path:"/dashboard",
+    element:<DashBoardLatout/>,
+    children:[
+      {
+        index:true,
+        element:<DashBoard/>
+      },
+      //student route
+{
+  path:"student-cp",
+  element:<StudentCp/>
+}
+    ]
+  }
 ]);
