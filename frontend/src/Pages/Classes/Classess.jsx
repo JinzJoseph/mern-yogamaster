@@ -143,7 +143,7 @@ const Classes = () => {
                 </span>
               </div>
               <Link
-                to={`/class/${cls._id}`}
+                to={`/class/id/${cls._id}`}
                 className="text-blue-500 hover:underline"
               >
                 <button className="px-3 py-2 bg-secondary w-full mt-3 rounded-lg text-white hover:bg-red-500">
