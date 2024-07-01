@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 import Stripe from "stripe";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 dotenv.config();
 
 const stripe = new Stripe(process.env.STRIPE_API_KEY, {
@@ -276,20 +276,21 @@ async function run() {
     });
 
     // Checking the classes which are already enrolled by the user
-   
 
     app.get("/cart/:email", verifyJWT, async (req, res) => {
       try {
         const email = req.params.email;
-        console.log("email"+email);
-        
+        console.log("email" + email);
+
         const query = { userEmail: email };
         const projection = { classId: 1 };
-        
+
         // Fetch cart items with the specified email
-        const carts = await cartCollection.find(query, { projection }).toArray();
+        const carts = await cartCollection
+          .find(query, { projection })
+          .toArray();
         // console.log("Carts fetched:", carts);
-        
+
         // Extract class IDs from the cart items and validate them
         const classIds = carts
           .map((cart) => {
@@ -301,23 +302,24 @@ async function run() {
             }
           })
           .filter((id) => id !== null); // Filter out invalid ObjectIds
-        
+
         if (classIds.length === 0) {
           return res.status(200).send([]); // If no valid class IDs, return empty array
         }
-        
+
         const query2 = { _id: { $in: classIds } };
-        
+
         // Fetch class details based on the class IDs
         const result = await classesCollection.find(query2).toArray();
-        
+
         res.status(200).send(result);
       } catch (error) {
         console.error("Error fetching cart items:", error);
-        res.status(500).send({ error: "An error occurred while fetching cart items." });
+        res
+          .status(500)
+          .send({ error: "An error occurred while fetching cart items." });
       }
     });
-    
 
     // Get cart of specified email of user
     app.get("/cart/:email", verifyJWT, async (req, res) => {
@@ -336,70 +338,118 @@ async function run() {
     });
 
     // Delete cart items
-    
 
-    app.delete('/delete-cart-items/:id', verifyJWT, async (req, res) => {
+    app.delete("/delete-cart-items/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = { classId: id };
       const result = await cartCollection.deleteOne(query);
       res.send(result);
-  })
+    });
     // Create payment intent
-    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
-      const { price } = req.body;
-      const amount = parseInt(price) * 100;
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: amount,
-        currency: "usd",
-        payment_method_types: ["card"],
-      });
-      res.send({
-        clientSecret: paymentIntent.client_secret,
-      });
+    // Example backend endpoint
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price, description } = req.body;
+      try {
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: price * 100, // convert to smallest currency unit
+          currency: "usd",
+          payment_method_types: ["card"],
+          description, // include the description
+        });
+        res.send({ clientSecret: paymentIntent.client_secret });
+      } catch (error) {
+        res.status(500).send({ error: error.message });
+      }
     });
 
     // Payment info
     app.post("/payment-info", verifyJWT, async (req, res) => {
-      const paymentInfo = req.body;
-      const classesId = paymentInfo.classesId.map((id) => new ObjectId(id));
-      const userEmail = paymentInfo.userEmail;
-      const singleClassId = req.query.classId;
+      try {
+        console.log(req.body.body);
+        console.log("classid" + req.body.body.classId);
+        const classesId = req.body.body.classId;
+        const userEmail = req.body.body.userEmail;
+        const transactionId = req.body.body.transitionId;
+        // console.log(classesId+"   "+userEmail+" "+ transactionId)
+        // Validate classesId
+        if (!Array.isArray(classesId)) {
+          throw new Error("Invalid classesId. Expected an array.");
+        }
 
-      let query;
-      if (singleClassId) {
-        query = { classId: singleClassId, userMail: userEmail };
-      } else {
-        query = { classId: { $in: classesId }, userMail: userEmail };
+        const singleClassId = req.query.classId;
+        let query;
+        if (singleClassId) {
+          query = { classId: singleClassId, userMail: userEmail };
+        } else {
+          query = { classId: { $in: classesId } };
+        }
+
+        // Convert classesId array to ObjectId array
+        const objectIdArray = classesId.map((id) => new ObjectId(id));
+
+        const classesQuery = { _id: { $in: objectIdArray } };
+
+        // Fetch classes information from MongoDB
+        const classes = await classesCollection.find(classesQuery).toArray();
+
+        // Calculate updated enrollment and seats availability
+        const totalEnrolled =
+          classes.reduce(
+            (total, current) => total + (current.totalEnrolled || 0),
+            0
+          ) + 1;
+        const availableSeats =
+          classes.reduce(
+            (total, current) => total + (current.availableSeats || 0),
+            0
+          ) - 1;
+
+        // Prepare data for new enrollment
+        const newEnrolledData = {
+          userEmail,
+          classesId: objectIdArray,
+          transactionId,
+        };
+
+        // Update documents in MongoDB collections
+        const updatedDoc = {
+          $set: {
+            totalEnrolled,
+            availableSeats,
+          },
+        };
+
+        // Update classes collection with new enrollment data
+        const updatedResult = await classesCollection.updateMany(
+          classesQuery,
+          updatedDoc,
+          { upsert: true }
+        );
+
+        // Insert enrollment data into enrolled collection
+        const enrolledResult = await enrolledCollection.insertOne(
+          newEnrolledData
+        );
+
+        // Delete cart items from cart collection
+        const deletedResult = await cartCollection.deleteMany(query);
+
+        // Insert payment information into payment collection
+        const paymentResult = await paymentCollection.insertOne(req.body);
+
+        // Send response with results
+        res.json({
+          paymentResult,
+          deletedResult,
+          enrolledResult,
+          updatedResult,
+        });
+      } catch (error) {
+        console.error("Error processing payment:", error);
+        res
+          .status(500)
+          .json({ error: "An error occurred during the payment process." });
       }
-
-      const classesQuery = { _id: { $in: classesId } };
-      const classes = await classesCollection.find(classesQuery).toArray();
-
-      const newEnrolledData = {
-        userEmail: userEmail,
-        classesId: classesId,
-        transactionId: paymentInfo.transactionId,
-      };
-
-      const updatedDoc = {
-        $inc: {
-          totalEnrolled: 1,
-          availableSeats: -1,
-        },
-      };
-
-      const updatedResult = await classesCollection.updateMany(
-        classesQuery,
-        updatedDoc,
-        { upsert: true }
-      );
-      const enrolledResult = await enrolledCollection.insertOne(
-        newEnrolledData
-      );
-      const deletedResult = await cartCollection.deleteMany(query);
-      const paymentResult = await paymentCollection.insertOne(paymentInfo);
-
-      res.send({ paymentResult, deletedResult, enrolledResult, updatedResult });
     });
 
     // Payment history specific users

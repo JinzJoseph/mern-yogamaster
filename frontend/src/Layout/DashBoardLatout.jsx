@@ -121,7 +121,7 @@ const DashBoardLayout = () => {
   const [open, setOpen] = useState(true);
   const { loader, logout } = useAuth();
   const { currentUser } = useUser();
-  console.log(currentUser);
+  //console.log(currentUser);
   const role = currentUser.role; // Replace with appropriate role fetching logic
 //  const role="user"
   if (loader) {
