@@ -43,7 +43,7 @@ const PopularInstructor = () => {
                   <div className="flex flex-col items-center flex-wrap">
                     <p className="font-medium text-lg dark:text-white text-gray-800">
                       {" "}
-                      {instructor.instructor.name}
+                      {instructor?.instructor?.name}
                     </p>
                     <p className="text-gray-500 whitespace-nowrap">
                       Instructor

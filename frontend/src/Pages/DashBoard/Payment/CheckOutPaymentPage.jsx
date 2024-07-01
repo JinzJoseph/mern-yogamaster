@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useUser from "../../../hooks/useUser";
-import { Await, Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const CheckOutPaymentPage = ({ price, cartItem }) => {
   const baseUrl = "http://localhost:3000/payment-info";
   const url = cartItem ? `${baseUrl}?classId=${cartItem}` : baseUrl;
-
+const navigate=useNavigate()
   const stripe = useStripe();
   const elements = useElements();
   const axiosSecure = useAxiosSecure();
@@ -101,7 +101,7 @@ const CheckOutPaymentPage = ({ price, cartItem }) => {
 
     if (paymentIntent.status === "succeeded") {
       setSucceeded(true);
-      setMessage("Payment succeeded!");
+    
       const transitionId = paymentIntent.id;
       const paymentMethod = paymentIntent.payment_method;
       const amount = paymentIntent.amount / 100;
@@ -136,6 +136,13 @@ const CheckOutPaymentPage = ({ price, cartItem }) => {
         )
         .then((res) => {
           console.log(res);
+          if(res.data.deletedResult.deletedCount >=0 &&res.data.paymentResult.insertedId && res.data.updatedResult.modifiedCount >0
+          ){
+            setMessage("Payment succeeded,Now You can Access the course");
+            Navigate("/dashboard/enrolled-classes")
+          }else{
+            setMessage("Payment Failed")
+          }
         })
         .catch((error) => console.log(error));
     } else {
@@ -178,7 +185,7 @@ const CheckOutPaymentPage = ({ price, cartItem }) => {
           {message}
         </div>
       )}
-      {succeeded && <p className="text-green-400 mt-3">Payment succeeded!</p>}
+
     </div>
   );
 };

@@ -363,93 +363,144 @@ async function run() {
     });
 
     // Payment info
+    // app.post("/payment-info", verifyJWT, async (req, res) => {
+    //   try {
+    //     // console.log(req.body.body);
+    //     // console.log("classid" + req.body.body.classId);
+    //     const classesId = req.body.body.classId;
+    //     const userEmail = req.body.body.userEmail;
+    //     const transactionId = req.body.body.transitionId;
+    //     // console.log(classesId+"   "+userEmail+" "+ transactionId)
+    //     // Validate classesId
+    //     if (!Array.isArray(classesId)) {
+    //       throw new Error("Invalid classesId. Expected an array.");
+    //     }
+
+    //     const singleClassId = req.query.classId;
+    //     let query;
+    //     if (singleClassId) {
+    //       query = { classId: singleClassId, userMail: userEmail };
+    //     } else {
+    //       query = { classId: { $in: classesId } };
+    //     }
+
+    //     // Convert classesId array to ObjectId array
+    //     const objectIdArray = classesId.map((id) => new ObjectId(id));
+
+    //     const classesQuery = { _id: { $in: objectIdArray } };
+
+    //     // Fetch classes information from MongoDB
+    //     const classes = await classesCollection.find(classesQuery).toArray();
+
+    //     // Calculate updated enrollment and seats availability
+    //     const totalEnrolled =
+    //       classes.reduce(
+    //         (total, current) => total + (current.totalEnrolled || 0),
+    //         0
+    //       ) + 1;
+    //     const availableSeats =
+    //       classes.reduce(
+    //         (total, current) => total + (current.availableSeats || 0),
+    //         0
+    //       ) - 1;
+
+    //     // Prepare data for new enrollment
+    //     const newEnrolledData = {
+    //       userEmail,
+    //       classesId: objectIdArray,
+    //       transactionId,
+    //     };
+
+    //     // Update documents in MongoDB collections
+    //     const updatedDoc = {
+    //       $set: {
+    //         totalEnrolled,
+    //         availableSeats,
+    //       },
+    //     };
+
+    //     // Update classes collection with new enrollment data
+    //     const updatedResult = await classesCollection.updateMany(
+    //       classesQuery,
+    //       updatedDoc,
+    //       { upsert: true }
+    //     );
+
+    //     // Insert enrollment data into enrolled collection
+    //     const enrolledResult = await enrolledCollection.insertOne(
+    //       newEnrolledData
+    //     );
+
+    //     // Delete cart items from cart collection
+    //     const deletedResult = await cartCollection.deleteMany(query);
+
+    //     // Insert payment information into payment collection
+    //     const paymentResult = await paymentCollection.insertOne(req.body);
+
+    //     // Send response with results
+    //     res.json({
+    //       paymentResult,
+    //       deletedResult,
+    //       enrolledResult,
+    //       updatedResult,
+    //     });
+    //   } catch (error) {
+    //     console.error("Error processing payment:", error);
+    //     res
+    //       .status(500)
+    //       .json({ error: "An error occurred during the payment process." });
+    //   }
+    // });
+
     app.post("/payment-info", verifyJWT, async (req, res) => {
-      try {
-        console.log(req.body.body);
-        console.log("classid" + req.body.body.classId);
-        const classesId = req.body.body.classId;
-        const userEmail = req.body.body.userEmail;
-        const transactionId = req.body.body.transitionId;
-        // console.log(classesId+"   "+userEmail+" "+ transactionId)
-        // Validate classesId
-        if (!Array.isArray(classesId)) {
-          throw new Error("Invalid classesId. Expected an array.");
-        }
-
-        const singleClassId = req.query.classId;
-        let query;
-        if (singleClassId) {
-          query = { classId: singleClassId, userMail: userEmail };
-        } else {
-          query = { classId: { $in: classesId } };
-        }
-
-        // Convert classesId array to ObjectId array
-        const objectIdArray = classesId.map((id) => new ObjectId(id));
-
-        const classesQuery = { _id: { $in: objectIdArray } };
-
-        // Fetch classes information from MongoDB
-        const classes = await classesCollection.find(classesQuery).toArray();
-
-        // Calculate updated enrollment and seats availability
-        const totalEnrolled =
-          classes.reduce(
-            (total, current) => total + (current.totalEnrolled || 0),
-            0
-          ) + 1;
-        const availableSeats =
-          classes.reduce(
-            (total, current) => total + (current.availableSeats || 0),
-            0
-          ) - 1;
-
-        // Prepare data for new enrollment
-        const newEnrolledData = {
-          userEmail,
-          classesId: objectIdArray,
-          transactionId,
-        };
-
-        // Update documents in MongoDB collections
-        const updatedDoc = {
-          $set: {
-            totalEnrolled,
-            availableSeats,
-          },
-        };
-
-        // Update classes collection with new enrollment data
-        const updatedResult = await classesCollection.updateMany(
-          classesQuery,
-          updatedDoc,
-          { upsert: true }
-        );
-
-        // Insert enrollment data into enrolled collection
-        const enrolledResult = await enrolledCollection.insertOne(
-          newEnrolledData
-        );
-
-        // Delete cart items from cart collection
-        const deletedResult = await cartCollection.deleteMany(query);
-
-        // Insert payment information into payment collection
-        const paymentResult = await paymentCollection.insertOne(req.body);
-
-        // Send response with results
-        res.json({
-          paymentResult,
-          deletedResult,
-          enrolledResult,
-          updatedResult,
-        });
-      } catch (error) {
-        console.error("Error processing payment:", error);
-        res
-          .status(500)
-          .json({ error: "An error occurred during the payment process." });
+      // const paymentInfo = req.body;
+      console.log(req.body.body);
+      const classesId = req.body.body.classId;
+      const userEmail = req.body.body.userEmail;
+      const transactionId = req.body.body.transitionId;
+      const singleClassId = req.query.classId;
+      let query;
+    
+      if (singleClassId) {
+        query = { classId: singleClassId, userMail: userEmail };
+      } else {
+        query = { classId: { $in: classesId } };
       }
+      const classesQuery = {
+        _id: { $in: classesId.map((id) => new ObjectId(id)) },
+      };
+      const classes = await classesCollection.find(classesQuery).toArray();
+      const newEnrolledData = {
+        userEmail: userEmail,
+        classesId: classesId.map((id) => new ObjectId(id)),
+        transactionId: transactionId,
+      };
+      const updatedDoc = {
+        $set: {
+          totalEnrolled:
+            classes.reduce(
+              (total, current) => total + current.totalEnrolled,
+              0
+            ) + 1 || 0,
+          availableSeats:
+            classes.reduce(
+              (total, current) => total + current.availableSeats,
+              0
+            ) - 1 || 0,
+        },
+      };
+
+      const updatedResult = await classesCollection.updateMany(
+        classesQuery,
+        updatedDoc,
+        { upsert: true }
+      );
+      const enrolledResult = await enrolledCollection.insertOne(
+        newEnrolledData
+      );
+      const deletedResult = await cartCollection.deleteMany(query);
+      const paymentResult = await paymentCollection.insertOne(req.body.body);
+      res.send({ paymentResult, deletedResult, enrolledResult, updatedResult });
     });
 
     // Payment history specific users
@@ -543,52 +594,49 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/enrolled-classes/:email", verifyJWT, async (req, res) => {
+    app.get('/enrolled-classes/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
       const query = { userEmail: email };
-
       const pipeline = [
-        {
-          $match: query,
-        },
-        {
-          $lookup: {
-            from: "classes",
-            localField: "classId", // Corrected to match your schema
-            foreignField: "_id",
-            as: "classes",
+          {
+              $match: query
           },
-        },
-        {
-          $unwind: "$classes",
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "classes.instructorEmail",
-            foreignField: "email",
-            as: "instructor",
+          {
+              $lookup: {
+                  from: "classes",
+                  localField: "classesId",
+                  foreignField: "_id",
+                  as: "classes"
+              }
           },
-        },
-        {
-          $project: {
-            _id: 0,
-            classes: 1,
-            instructor: { $arrayElemAt: ["$instructor", 0] },
+          {
+              $unwind: "$classes"
           },
-        },
-      ];
+          {
+              $lookup: {
+                  from: "users",
+                  localField: "classes.instructorEmail",
+                  foreignField: "email",
+                  as: "instructor"
+              }
+          },
+          {
+              $project: {
+                  _id: 0,
+                  classes: 1,
+                  instructor: {
+                      $arrayElemAt: ["$instructor", 0]
+                  }
+              }
+          }
 
-      try {
-        const result = await enrolledCollection.aggregate(pipeline).toArray();
-        res.json(result);
-      } catch (error) {
-        console.error("Error fetching enrolled classes:", error);
-        res.status(500).json({ error: "Failed to fetch enrolled classes" });
-      }
-    });
+      ]
+      const result = await enrolledCollection.aggregate(pipeline).toArray();
+      
+      res.send(result);
+  })
     // Applied route
-    app.post("/as-instructor", async (req, res) => {
+    app.post("/apply-instructor", async (req, res) => {
       const data = req.body;
       const result = await appliedCollection.insertOne(data);
       res.send(result);

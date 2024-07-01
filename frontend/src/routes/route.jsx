@@ -15,7 +15,7 @@ import SelectedClass from "../Pages/DashBoard/Student/SelectedClass";
 import PaymentHostroy from "../Pages/DashBoard/Payment/PaymentHostroy";
 import ApplyInstructor from "../Pages/DashBoard/Apply/ApplyInstructor";
 import MyPayment from "../Pages/DashBoard/Payment/MyPayment";
-
+import CourseDetails from "../Pages/DashBoard/Course/CourseDetails";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -72,21 +72,29 @@ export const router = createBrowserRouter([
         element: <StudentCp />,
       },
       {
-        path:"enrolled-classes",
-        element:<EnrolledClass/>
-      },{
-        path:"my-selected",
-        element:<SelectedClass/>
-      },{
-        path:'my-payments',
-        element:<PaymentHostroy/>
-      },{
-        path:"apply-instructor",
-        element:<ApplyInstructor/>
-      },{
-        path:"payment",
-        element:<MyPayment/>
-      }
+        path: "enrolled-classes",
+        element: <EnrolledClass />,
+      },
+      {
+        path: "my-selected",
+        element: <SelectedClass />,
+      },
+      {
+        path: "my-payments",
+        element: <PaymentHostroy />,
+      },
+      {
+        path: "apply-instructor",
+        element: <ApplyInstructor />,
+      },
+      {
+        path: "payment",
+        element: <MyPayment />,
+      },
+      {
+        path: "course-details",
+        element: <CourseDetails />,
+      },
     ],
   },
 ]);
