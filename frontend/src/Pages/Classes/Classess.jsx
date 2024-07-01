@@ -38,7 +38,7 @@ const Classes = () => {
       return navigate("/");
     }
     axiosSecure
-      .get(`/cart-items/${id}?email=${currentUser.email}`)
+      .get(`/cart/${id}?email=${currentUser?.email}`)
       .then((res) => {
         console.log(res);
         if (res.data.classId === id) {

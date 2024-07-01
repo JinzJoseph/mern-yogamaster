@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import Stripe from "stripe";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
+import mongoose from "mongoose"
 dotenv.config();
 
 const stripe = new Stripe(process.env.STRIPE_API_KEY, {
@@ -25,12 +26,12 @@ const client = new MongoClient(uri, {
   },
 });
 const verifyJWT = async (req, res, next) => {
-  console.log(req.headers.authorization);
+  // console.log(req.headers.authorization);
   const authorization = req.headers.authorization;
-// console.log("authorization   "  +authorization);
+  // console.log("authorization   "  +authorization);
 
   if (!authorization) {
-    return res.status(401).send({ 
+    return res.status(401).send({
       error: true,
       message: "Unauthorize access1",
     });
@@ -268,50 +269,81 @@ async function run() {
 
     // Adding items to the cart
     app.post("/add-to-cart", verifyJWT, async (req, res) => {
+      console.log(req.body);
       const cartItems = req.body;
       const result = await cartCollection.insertOne(cartItems);
       res.send(result);
     });
 
     // Checking the classes which are already enrolled by the user
-    app.get("/cart-items/:id", verifyJWT, async (req, res) => {
-      const id = req.params.id;
-      const email = req.query.email;
+   
 
-      const query = { classId: id, userEmail: email };
-      const projection = { classId: 1 };
-    
+    app.get("/cart/:email", verifyJWT, async (req, res) => {
       try {
-        const result = await cartCollection.findOne(query, { projection });
-     console.log(result);
-        res.send(result);
+        const email = req.params.email;
+        console.log("email"+email);
+        
+        const query = { userEmail: email };
+        const projection = { classId: 1 };
+        
+        // Fetch cart items with the specified email
+        const carts = await cartCollection.find(query, { projection }).toArray();
+        // console.log("Carts fetched:", carts);
+        
+        // Extract class IDs from the cart items and validate them
+        const classIds = carts
+          .map((cart) => {
+            if (ObjectId.isValid(cart.classId)) {
+              return new ObjectId(cart.classId);
+            } else {
+              console.error(`Invalid ObjectId: ${cart.classId}`);
+              return null;
+            }
+          })
+          .filter((id) => id !== null); // Filter out invalid ObjectIds
+        
+        if (classIds.length === 0) {
+          return res.status(200).send([]); // If no valid class IDs, return empty array
+        }
+        
+        const query2 = { _id: { $in: classIds } };
+        
+        // Fetch class details based on the class IDs
+        const result = await classesCollection.find(query2).toArray();
+        
+        res.status(200).send(result);
       } catch (error) {
-        console.error('Error retrieving cart item:', error);
-        res.status(500).send({ message: 'Error retrieving cart item' });
+        console.error("Error fetching cart items:", error);
+        res.status(500).send({ error: "An error occurred while fetching cart items." });
       }
     });
+    
 
     // Get cart of specified email of user
     app.get("/cart/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       console.log(email);
-      const query = { email: email };
+      const query = { userEmail: email };
       const projection = { classId: 1 };
       const carts = await cartCollection.find(query, { projection }).toArray();
-      const classIds = carts.map((cart) => new ObjectId(cart.classId));
-      const query2 = { _id: { $in: classIds } };
-      const result = await classesCollection.find(query2).toArray();
+      const classIds = carts.map((cart) => cart.classId);
+      console.log(classIds);
+      const _id = new ObjectId(classIds);
+      console.log(_id);
+      // const query2 = { _id: { $in: classIds } };
+      const result = await classesCollection.find(_id).toArray();
       res.send(result);
     });
 
     // Delete cart items
-    app.delete("/delete-cart-items/:id", verifyJWT, async (req, res) => {
+    
+
+    app.delete('/delete-cart-items/:id', verifyJWT, async (req, res) => {
       const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
+      const query = { classId: id };
       const result = await cartCollection.deleteOne(query);
       res.send(result);
-    });
-
+  })
     // Create payment intent
     app.post("/create-payment-intent", verifyJWT, async (req, res) => {
       const { price } = req.body;
@@ -461,42 +493,42 @@ async function run() {
       res.send(result);
     });
 
-    app.get('/enrolled-classes/:email', verifyJWT, async (req, res) => {
+    app.get("/enrolled-classes/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       const query = { userEmail: email };
-    
+
       const pipeline = [
         {
-          $match: query
+          $match: query,
         },
         {
           $lookup: {
             from: "classes",
             localField: "classId", // Corrected to match your schema
             foreignField: "_id",
-            as: "classes"
-          }
+            as: "classes",
+          },
         },
         {
-          $unwind: "$classes"
+          $unwind: "$classes",
         },
         {
           $lookup: {
             from: "users",
             localField: "classes.instructorEmail",
             foreignField: "email",
-            as: "instructor"
-          }
+            as: "instructor",
+          },
         },
         {
           $project: {
             _id: 0,
             classes: 1,
-            instructor: { $arrayElemAt: ["$instructor", 0] }
-          }
-        }
+            instructor: { $arrayElemAt: ["$instructor", 0] },
+          },
+        },
       ];
-    
+
       try {
         const result = await enrolledCollection.aggregate(pipeline).toArray();
         res.json(result);

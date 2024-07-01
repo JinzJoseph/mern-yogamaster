@@ -232,7 +232,7 @@ const DashBoardLayout = () => {
             </NavLink>
           </li>
         </div>
-        <div >
+        <div className=" h-screen overflow-y-auto px-8 flex-1 mt-8" >
         <Scroll />
         <Outlet />
       </div>

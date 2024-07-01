@@ -10,6 +10,11 @@ import axios from "axios";
 import DashBoardLatout from "../Layout/DashBoardLatout";
 import DashBoard from "../Pages/DashBoard/DashBoard";
 import StudentCp from "../Pages/DashBoard/Student/StudentCp";
+import EnrolledClass from "../Pages/DashBoard/EnrolledClass/EnrolledClass";
+import SelectedClass from "../Pages/DashBoard/Student/SelectedClass";
+import PaymentHostroy from "../Pages/DashBoard/Payment/PaymentHostroy";
+import ApplyInstructor from "../Pages/DashBoard/Apply/ApplyInstructor";
+import MyPayment from "../Pages/DashBoard/Payment/MyPayment";
 
 export const router = createBrowserRouter([
   {
@@ -21,46 +26,67 @@ export const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        path:"instructors",
-        element:<Instructors/>
-      },{
-        path:"classes",
-        element:<Classess/>
+        path: "instructors",
+        element: <Instructors />,
       },
       {
-        path:"login",
-        element:<Login/>
-      }, {
-        path:"register",
-        element:<Register/>
-      }, {
+        path: "classes",
+        element: <Classess />,
+      },
+      {
+        path: "login",
+        element: <Login />,
+      },
+      {
+        path: "register",
+        element: <Register />,
+      },
+      {
         path: "class/id/:id",
         element: <ClassesDetails />,
         loader: async ({ params }) => {
           try {
-            const response = await axios.get(`http://localhost:3000/classes/id/${params.id}`);
-            return response.data; 
+            const response = await axios.get(
+              `http://localhost:3000/classes/id/${params.id}`
+            );
+            return response.data;
           } catch (error) {
             console.error("Error fetching class details:", error);
-            throw error; 
+            throw error;
           }
-        }
-      }
+        },
+      },
     ],
   },
   {
-    path:"/dashboard",
-    element:<DashBoardLatout/>,
-    children:[
+    path: "/dashboard",
+    element: <DashBoardLatout />,
+    children: [
       {
-        index:true,
-        element:<DashBoard/>
+        index: true,
+        element: <DashBoard />,
       },
       //student route
-{
-  path:"student-cp",
-  element:<StudentCp/>
-}
-    ]
-  }
+      {
+        path: "student-cp",
+        element: <StudentCp />,
+      },
+      {
+        path:"enrolled-classes",
+        element:<EnrolledClass/>
+      },{
+        path:"my-selected",
+        element:<SelectedClass/>
+      },{
+        path:'my-payments',
+        element:<PaymentHostroy/>
+      },{
+        path:"apply-instructor",
+        element:<ApplyInstructor/>
+      },{
+        path:"payment",
+        element:<MyPayment/>
+      }
+    ],
+  },
 ]);
