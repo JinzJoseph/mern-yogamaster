@@ -171,6 +171,7 @@ async function run() {
 
     // Creating a new class
     app.post("/new-class", verifyJWT, verifyInstructor, async (req, res) => {
+      // console.log(req.body);
       const newClass = req.body;
       const createdClass = await classesCollection.insertOne(newClass);
       res.send(createdClass);

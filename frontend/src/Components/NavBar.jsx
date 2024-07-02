@@ -4,10 +4,11 @@ import { ThemeProvider, THEME_ID, createTheme } from "@mui/material/styles";
 import { Switch, duration } from "@mui/material";
 import photoUrl from "../assets/home/girl.jpg";
 import { FaBars } from "react-icons/fa";
-import {motion} from "framer-motion"
+
 import useAuth from "../hooks/useAuth";
 import { AuthContext } from "../utilities/Providers/AuthProvider";
 import useUser from "../hooks/useUser";
+import Swal from "sweetalert2";
 const NavBar = () => {
   const navLinks = [
     {
@@ -23,11 +24,7 @@ const NavBar = () => {
       route: "/classes",
     },
   ];
-  const mobileMenuItems=[
-    {
-
-    }
-  ]
+  const mobileMenuItems = [{}];
   const [navBg, setNavBg] = useState("bg-[#15151580]");
 
   const materialTheme = createTheme({
@@ -40,6 +37,7 @@ const NavBar = () => {
       },
     },
   });
+  
   const navigate = useNavigate();
   const location = useLocation();
   const { currentUser } = useUser();
@@ -53,7 +51,7 @@ const NavBar = () => {
   const toggleMobileMenu = () => {
     setMobileMenuOpen(true);
   };
-  const {logout}=useContext(AuthContext)
+  const { logout,user } = useContext(AuthContext);
   useEffect(() => {
     const darkClass = "dark";
     const root = window.document.documentElement;
@@ -97,38 +95,71 @@ const NavBar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-  const handleLogout = async() => {
-   await logout()
+  console.log(user)
+  const handleLogout = (e) => {
+    e.preventDefault();
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, Logout it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        logout()
+          .then(
+            Swal.fire({
+              title: "Logout!",
+              text: "Logout Successful.",
+              icon: "success",
+            })
+          )
+          .catch((err) => console.log(err));
+      }
+      navigate("/");
+    });
   };
 
   return (
-    <motion 
-    initial={{opacity:0}}
-    animate={{opacity:1}}
-    transition={{duration:0.5}}
-    className={`${isHome ? navBg :"bg-white dark:bg-black backdrop-blur-2xl"} ${isFixed ? "static" :"fixed"} top-0 
-    transition-colors duration-500 ease-in-out w-full z-10`}>
+    <motion
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className={`${
+        isHome ? navBg : "bg-white dark:bg-black backdrop-blur-2xl"
+      } ${isFixed ? "static" : "fixed"} top-0 
+    transition-colors duration-500 ease-in-out w-full z-10`}
+    >
       <div className="lg:w-[95%] mx-auto sm:px-6 lg:px-6 ">
         <div className="px-4 py-4 flex items-center justify-between">
-          <div className="flex-shrink-0 cursor-pointer pl-7 md:p-0 flex items-center dark:text-white" onClick={()=>navigate("/")}>
-           <div>
-           <h1 className="text-4xl inline-flex gap-3 items-center font-bold">
-              yogaMaster{" "}
-              <img
-                src="../../../public/yoga-logo.png"
-                alt=""
-                className="w-8 h-8 dark:text-white"
-              />
-            </h1>
-            <p className="font-bold text-[15px]  mt-2 tracking-[14px]">
-              Quick Explore
-            </p>
-           </div>
+          <div
+            className="flex-shrink-0 cursor-pointer pl-7 md:p-0 flex items-center dark:text-white"
+            onClick={() => navigate("/")}
+          >
+            <div>
+              <h1 className="text-4xl inline-flex gap-3 items-center font-bold">
+                yogaMaster{" "}
+                <img
+                  src="../../../public/yoga-logo.png"
+                  alt=""
+                  className="w-8 h-8 dark:text-white"
+                />
+              </h1>
+              <p className="font-bold text-[15px]  mt-2 tracking-[14px]">
+                Quick Explore
+              </p>
+            </div>
           </div>
           {/* mobile menu items */}
           <div className="md:hidden flex items-center">
-            <button type="button" onClick={toggleMobileMenu} className="text-gray-300 hover:text-white focus:outline-none items-center justify-center">
-                <FaBars className="h-6 w-6 hover:text-primary text-black dark:text-white items-center" />
+            <button
+              type="button"
+              onClick={toggleMobileMenu}
+              className="text-gray-300 hover:text-white focus:outline-none items-center justify-center"
+            >
+              <FaBars className="h-6 w-6 hover:text-primary text-black dark:text-white items-center" />
             </button>
           </div>
           {/* navigational links */}
@@ -139,7 +170,7 @@ const NavBar = () => {
                   <li key={index}>
                     <NavLink
                       to={link.route}
-                      style={{whiteSpace:"nowrap"}}
+                      style={{ whiteSpace: "nowrap" }}
                       className={({ isActive }) =>
                         `font-bold ${
                           isActive
@@ -155,7 +186,7 @@ const NavBar = () => {
                   </li>
                 ))}
                 {/* based on user    */}
-                {currentUser ? null : isLogin ? (
+                {user ? null : isLogin ? (
                   <li>
                     <NavLink
                       className={({ isActive }) =>
@@ -192,7 +223,7 @@ const NavBar = () => {
                     </NavLink>
                   </li>
                 )}
-                {currentUser && (
+                {user && (
                   <li>
                     <NavLink
                       to={"/dashboard"}
@@ -210,16 +241,16 @@ const NavBar = () => {
                     </NavLink>
                   </li>
                 )}
-                {currentUser && (
+                {user && (
                   <li>
                     <img
-                      src={currentUser?.photoUrl || photoUrl}
+                      src={user?.photoURL}
                       alt="profile img"
                       className="h-[40px] rounded-full w-[40px]"
                     />
                   </li>
                 )}
-                {currentUser && (
+                {user && (
                   <li>
                     <NavLink
                       className={

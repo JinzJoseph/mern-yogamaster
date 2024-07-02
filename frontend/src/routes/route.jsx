@@ -16,6 +16,11 @@ import PaymentHostroy from "../Pages/DashBoard/Payment/PaymentHostroy";
 import ApplyInstructor from "../Pages/DashBoard/Apply/ApplyInstructor";
 import MyPayment from "../Pages/DashBoard/Payment/MyPayment";
 import CourseDetails from "../Pages/DashBoard/Course/CourseDetails";
+import InstructorCp from "../Pages/Instructor/InstructorCp";
+import AddClass from "../Pages/Instructor/AddClass";
+import MyClass from "../Pages/Instructor/MyClass";
+import ApprovedClass from "../Pages/Instructor/ApprovedClass";
+import PendingClass from "../Pages/Instructor/PendingClass";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -95,6 +100,22 @@ export const router = createBrowserRouter([
         path: "course-details",
         element: <CourseDetails />,
       },
+      {
+        path:"instructor-cp",
+        element:<InstructorCp/>
+      },{
+        path:"add-class",
+        element:<AddClass/>
+      },{
+        path:"my-classes",
+        element:<MyClass/>
+      },{
+        path:"my-approved",
+        element:<ApprovedClass/>
+      },{
+        path:"my-pending",
+        element:<PendingClass/>
+      }
     ],
   },
 ]);

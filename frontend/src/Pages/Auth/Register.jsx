@@ -43,7 +43,7 @@ const Register = () => {
               .post("http://localhost:3000/new-user", userImp)
               .then(() => {
                 alert("Registeration Successfull")
-                navigate("/");
+                navigate("/login");
                 setErr('')
                 return "registertion successfull";
               })
