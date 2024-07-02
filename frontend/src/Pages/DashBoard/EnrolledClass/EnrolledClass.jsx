@@ -39,13 +39,13 @@ const EnrolledClass = () => {
                 className="bg-white shadow-md h-96  mx-3 rounded-3xl flex flex-col  md:flex-row justify-around items-center overflow-hidden sm:flex-row sm:h-52 sm:w-4/5"
               >
                 <img
-                  src={item.classes.image}
+                  src={item.classes.imageUrl}
                   alt=""
                   className="h-1/2 w-full sm:h-full sm:w-1/2 object-cover"
                 />
                 <div className="flex-1 w-full flex flex-col items-baseline justify-around h-1/2 pl-6 sm:h-full sm:items-baseline sm:w-1/2">
                   <div>
-                    <h1>{item.classes.name}</h1>
+                    <h1>{item.classes.courseName}</h1>
                     <p className="text-secondary">{item.classes.instructorName}</p>
                   </div>
                   <div className="flex gap-2">

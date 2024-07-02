@@ -21,6 +21,7 @@ import AddClass from "../Pages/Instructor/AddClass";
 import MyClass from "../Pages/Instructor/MyClass";
 import ApprovedClass from "../Pages/Instructor/ApprovedClass";
 import PendingClass from "../Pages/Instructor/PendingClass";
+import UpdateClass from "../Pages/Instructor/UpdateClass";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -115,6 +116,20 @@ export const router = createBrowserRouter([
       },{
         path:"my-pending",
         element:<PendingClass/>
+      },{
+        path:"update/:id",
+        element:<UpdateClass/>,
+        loader: async ({ params }) => {
+          try {
+            const response = await axios.get(
+              `http://localhost:3000/classes/id/${params.id}`
+            );
+            return response.data;
+          } catch (error) {
+            console.error("Error fetching class details:", error);
+            throw error;
+          }
+        },
       }
     ],
   },

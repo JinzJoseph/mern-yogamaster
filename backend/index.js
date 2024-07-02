@@ -26,7 +26,7 @@ const client = new MongoClient(uri, {
   },
 });
 const verifyJWT = async (req, res, next) => {
-  // console.log(req.headers.authorization);
+  //console.log(req.headers.authorization);
   const authorization = req.headers.authorization;
   // console.log("authorization   "  +authorization);
 
@@ -168,7 +168,39 @@ async function run() {
       );
       res.send(updatedDoc);
     });
-
+    //updating a class
+    app.put(
+      "/update-class/:id",
+      verifyJWT,
+      verifyInstructor,
+      async (req, res) => {
+        // console.log(req.body)
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const Doc = req.body;
+        const options = { upsert: true };
+        const updatedDoc = await classesCollection.updateOne(
+          filter,
+          {
+            $set: {
+              courseName: Doc.courseName,
+              imageUrl: Doc.imageUrl,
+              instructorEmail: Doc.instructorEmail,
+              instructorName: Doc.instructorName,
+              seat: Doc.seat,
+              price: Doc.price,
+              link: Doc.link,
+              description: Doc.description,
+              status: Doc.status,
+              totalenrolled: Doc.totalenrolled,
+              submitted: Doc.submitted,
+            },
+          },
+          options
+        );
+        res.send(updatedDoc);
+      }
+    );
     // Creating a new class
     app.post("/new-class", verifyJWT, verifyInstructor, async (req, res) => {
       // console.log(req.body);
@@ -189,11 +221,35 @@ async function run() {
         res.send(instructorClasses);
       }
     );
-
+    //get all pending class of a instructor
+    app.get(
+      "/pendingclasses/:email",
+      verifyJWT,
+      verifyInstructor,
+      async (req, res) => {
+        const email = req.params.email;
+        const query = { instructorEmail: email, status: "pending" };
+        const pendingclass = await classesCollection.find(query).toArray();
+        res.send(pendingclass);
+      }
+    );
+    // get all approved class of a instructor
+    app.get(
+      "/approvedclass/:email",
+      verifyJWT,
+      verifyInstructor,
+      async (req, res) => {
+        const email = req.params.email;
+        const query = { instructorEmail: email, status: "approved" };
+        const approvedclass = await classesCollection.find(query).toArray();
+        res.send(approvedclass);
+      }
+    );
     // Get all approved classes
     app.get("/getallclasses", async (req, res) => {
       const query = { status: "approved" };
       const result = await classesCollection.find(query).toArray();
+     // console.log(result)
       res.send(result);
     });
 
@@ -461,7 +517,7 @@ async function run() {
       const transactionId = req.body.body.transitionId;
       const singleClassId = req.query.classId;
       let query;
-    
+
       if (singleClassId) {
         query = { classId: singleClassId, userMail: userEmail };
       } else {
@@ -530,6 +586,7 @@ async function run() {
         .sort({ totalEnrolled: -1 })
         .limit(6)
         .toArray();
+        console.log(result)
       res.send(result);
     });
 
@@ -595,47 +652,46 @@ async function run() {
       res.send(result);
     });
 
-    app.get('/enrolled-classes/:email', verifyJWT, async (req, res) => {
+    app.get("/enrolled-classes/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       const query = { userEmail: email };
       const pipeline = [
-          {
-              $match: query
+        {
+          $match: query,
+        },
+        {
+          $lookup: {
+            from: "classes",
+            localField: "classesId",
+            foreignField: "_id",
+            as: "classes",
           },
-          {
-              $lookup: {
-                  from: "classes",
-                  localField: "classesId",
-                  foreignField: "_id",
-                  as: "classes"
-              }
+        },
+        {
+          $unwind: "$classes",
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "classes.instructorEmail",
+            foreignField: "email",
+            as: "instructor",
           },
-          {
-              $unwind: "$classes"
+        },
+        {
+          $project: {
+            _id: 0,
+            classes: 1,
+            instructor: {
+              $arrayElemAt: ["$instructor", 0],
+            },
           },
-          {
-              $lookup: {
-                  from: "users",
-                  localField: "classes.instructorEmail",
-                  foreignField: "email",
-                  as: "instructor"
-              }
-          },
-          {
-              $project: {
-                  _id: 0,
-                  classes: 1,
-                  instructor: {
-                      $arrayElemAt: ["$instructor", 0]
-                  }
-              }
-          }
-
-      ]
+        },
+      ];
       const result = await enrolledCollection.aggregate(pipeline).toArray();
-      
+
       res.send(result);
-  })
+    });
     // Applied route
     app.post("/apply-instructor", async (req, res) => {
       const data = req.body;

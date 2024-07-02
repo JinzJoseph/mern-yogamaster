@@ -1,15 +1,11 @@
-import React, { useState } from "react";
-import useAxiosSecure from "../../hooks/useAxiosSecure";
+import React, { useState, useEffect } from "react";
+import { useLoaderData, useNavigate } from "react-router-dom";
 import useUser from "../../hooks/useUser";
 import uploadImage from "../../helper/helper";
+import useAxiosSecure from "../../hooks/useAxiosSecure";
 import Swal from "sweetalert2";
-import { RingLoader } from "react-spinners";
-import { useParams } from "react-router-dom";
 
-const AddClass = () => {
-  const params=useParams()
-  const axiosSecure = useAxiosSecure();
-  const { currentUser, isLoading } = useUser();
+const UpdateClass = () => {
   const [image, setImage] = useState(null);
   const [courseName, setCourseName] = useState("");
   const [seat, setSeat] = useState("");
@@ -17,24 +13,31 @@ const AddClass = () => {
   const [link, setLink] = useState("");
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
-if(isLoading){
-  return (
-    <div className="flex justify-center items-center h-screen">
-      <RingLoader color="blue" size={80} />
-    </div>
-  );
-}
+  const data = useLoaderData();
+  const { currentUser } = useUser();
+  const axiosSecure = useAxiosSecure();
+  const navigate = useNavigate();
+  useEffect(() => {
+    setCourseName(data.courseName);
+    setSeat(data.seat);
+    setPrice(data.price);
+    setLink(data.link);
+    setDescription(data.description);
+    setImageUrl(data.imageUrl);
+  }, [data]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    let finalImageUrl = imageUrl;
 
-    // Upload the image to Cloudinary
-    const uploadImageCloudinary = await uploadImage(image);
-    const imageUrl = uploadImageCloudinary.url;
+    if (image) {
+      const uploadImageCloudinary = await uploadImage(image);
+      finalImageUrl = uploadImageCloudinary.url;
+    }
 
-    // Construct the new class data
-    const newClass = {
+    const updatedClass = {
       courseName,
-      imageUrl,
+      imageUrl: finalImageUrl,
       instructorName: currentUser.name,
       instructorEmail: currentUser.email,
       seat,
@@ -42,25 +45,27 @@ if(isLoading){
       link,
       description,
       status: "pending",
-      totalenrolled: 0,
+      totalenrolled: data.totalenrolled || 0,
       submitted: new Date(),
     };
-    console.log(newClass)
+    console.log(updatedClass);
 
-    // Post the new class data to the backend
     try {
-      const response = await axiosSecure.put(`/update-class/${params.id}`, newClass);
-      console.log(response);
+      const response = await axiosSecure.put(
+        `/update-class/${data._id}`,
+        updatedClass
+      );
       if (response.status === 200) {
         Swal.fire({
           position: "top-start",
           icon: "success",
-          title: "Your course has been added",
+          title: "Your course has been updated",
           showConfirmButton: false,
           timer: 1500,
         });
+        navigate("/dashboard/my-classes");
       } else {
-        console.log("something went wrong");
+        console.log("Something went wrong");
       }
     } catch (err) {
       console.error(err);
@@ -71,7 +76,7 @@ if(isLoading){
     <div>
       <div className="my-10">
         <h1 className="text-center text-3xl font-bold">
-          Add Your <span className="text-blue-700">Course</span> Here..
+          Update Your <span className="text-blue-700">Course</span> Here..
         </h1>
       </div>
       <form
@@ -90,6 +95,7 @@ if(isLoading){
               onChange={(e) => setCourseName(e.target.value)}
               type="text"
               required
+              value={courseName}
               placeholder="Your Course Name"
               name="courseName"
               id="courseName"
@@ -106,7 +112,6 @@ if(isLoading){
             <input
               onChange={(e) => setImage(e.target.files[0])}
               type="file"
-              required
               name="image"
               id="image"
               className="block mt-[5px] w-full border border-secondary shadow-md text-sm focus:z-10 focus:border-blue-500 focus:ring-blue-500 file:border-0 file:bg-secondary file:text-white file:mr-4 file:py-3 file:px-4"
@@ -165,6 +170,7 @@ if(isLoading){
             <input
               onChange={(e) => setSeat(e.target.value)}
               type="text"
+              value={seat}
               placeholder="How many seats are available?"
               required
               name="availableSeats"
@@ -182,6 +188,7 @@ if(isLoading){
             <input
               onChange={(e) => setPrice(e.target.value)}
               type="text"
+              value={price}
               placeholder="How much does it cost?"
               required
               name="price"
@@ -204,6 +211,7 @@ if(isLoading){
             onChange={(e) => setLink(e.target.value)}
             type="text"
             required
+            value={link}
             className="w-full border-secondary px-4 py-2 border rounded-md focus:outline-none focus:ring-blue-500"
             placeholder="Your course intro video link"
             name="youtubeLink"
@@ -219,6 +227,7 @@ if(isLoading){
           <textarea
             onChange={(e) => setDescription(e.target.value)}
             required
+            value={description}
             className="w-full border-secondary px-4 py-2 border rounded-md focus:outline-none focus:ring-blue-500"
             placeholder="Description"
             name="description"
@@ -230,7 +239,7 @@ if(isLoading){
             type="submit"
             className="bg-secondary w-full hover:bg-red-400 duration-200 text-white font-bold py-2 px-4 rounded"
           >
-            Add Course
+            Update Course
           </button>
         </div>
       </form>
@@ -238,4 +247,4 @@ if(isLoading){
   );
 };
 
-export default AddClass;
+export default UpdateClass;

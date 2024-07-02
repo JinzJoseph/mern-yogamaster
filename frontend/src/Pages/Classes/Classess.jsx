@@ -18,11 +18,13 @@ const Classes = () => {
   useEffect(() => {
     axiosFetch
       .get("/getallclasses")
-      .then((res) => setClasses(res.data))
+      .then((res) => {
+        console.log(res)
+        setClasses(res.data)})
       .catch((err) => console.log(err));
   }, []);
   //handel add to cart
-
+console.log(classes)
   const handleSelect = (id) => {
     console.log(id);
     axiosSecure
@@ -81,14 +83,14 @@ const Classes = () => {
           <div
             key={index}
             className={`relative hover:-translate-y-2 duration-200 hover:ring-[2px] hover:ring-secondary w-64 h-[350px] mx-auto ${
-              cls.availableseats < 1 ? "bg-red-300" : "bg-white"
+              cls.seat < 1 ? "bg-red-300" : "bg-white"
             } dark:bg-slate-600 rounded-lg shadow-lg overflow-hidden cursor-pointer`}
             onMouseEnter={() => handleHover(index)}
             onMouseLeave={handleMouseLeave}
           >
             <div className="relative h-48">
               <img
-                src={cls?.image}
+                src={cls?.imageUrl}
                 alt=""
                 className="object-cover w-full h-full"
               />
@@ -113,14 +115,14 @@ const Classes = () => {
                       title={
                         role === "admin" || role === " instructor"
                           ? "Instructor/Admin can not be able to secect"
-                            ? cls.availableSeats < 1
+                            ? cls.seat < 1
                             : "No seats available"
                           : "You can seleclt class"
                       }
                       disabled={
                         role == "admin" ||
                         role === "instructor" ||
-                        cls.availableSeats < 1
+                        cls.seat < 1
                       }
                     >
                       Add to cart
@@ -130,13 +132,13 @@ const Classes = () => {
               </div>
             </div>
             <div className="px-6 py-2">
-              <h3 className="font-semibold mb-1">{cls?.name}</h3>
+              <h3 className="font-semibold mb-1">{cls?.courseName}</h3>
               <p className="text-gray-500 text-xs">
                 Instructor: {cls.instructorName}
               </p>
               <div className="flex items-center justify-between mt-4">
                 <span className="text-gray-600 text-xs dark:text-white">
-                  Available Seats: {cls.availableSeats}
+                  Available Seats: {cls.seat}
                 </span>
                 <span className="text-green-500 font-semibold">
                   ${cls.price}
