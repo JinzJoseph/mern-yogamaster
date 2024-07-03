@@ -27,17 +27,19 @@ const Register = () => {
     setErr("");
     signup(data.email, data.password).then((result) => {
       const user = result.user;
+      console.log(user);
       if (user) {
         return updateUser(data.name, data.photoUrl).then(() => {
           const userImp = {
             name: user?.displayName,
             email: user?.email,
-            photoURL: user?.photoUrl,
+            photoURL: user?.photoURL,
             role: "user",
             gender: data.gender,
             phone: data.phonenumber,
             address: data.address,
           };
+          console.log(userImp)
           if (user.email && user.displayName) {
             return axios
               .post("http://localhost:3000/new-user", userImp)

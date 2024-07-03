@@ -29,7 +29,7 @@ const ClassesDetails = () => {
       .get(`/enrolled-classes/${currentUser?.email}`)
       .then((res) => {
         console.log(res);
-        setenrolledclasses(res.data)
+        setEnrolledClasses(res.data)
         console.log("fghj kl;");
       })
       .catch((err) => console.log(err));
@@ -38,12 +38,12 @@ const ClassesDetails = () => {
       return navigate("/");
     }
     axiosSecure
-      .get(`/cart-items/${id}?email=${currentUser.email}`)
+      .get(`/cart/${id}?email=${currentUser?.email}`)
       .then((res) => {
         console.log(res);
         if (res.data.classId === id) {
           return alert("Already added to the cart");
-        } else if (enrolledclasses.find((item) => item.classes._id === id)) {
+        } else if (enrolledClasses.find((item) => item.classes._id === id)) {
           return alert("Already Enrolled");
         } else {
           const data = {
@@ -74,7 +74,7 @@ const ClassesDetails = () => {
                 <div className="single-course-details">
                   <div className="course-main-thumb h-[470px] mb-10">
                     <img
-                      src={data.image}
+                      src={data.imageUrl}
                       alt="Course"
                       className="rounded-md object-cover w-full h-full"
                     />

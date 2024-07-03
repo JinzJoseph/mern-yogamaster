@@ -121,7 +121,7 @@ const SelectedClass = () => {
                           <td className="py-2 px-2">
                             <div className="flex items-center">
                               <img
-                                src={item.image}
+                                src={item.imageUrl}
                                 alt=""
                                 className="h-16 w-16 rounded mr-4"
                               />

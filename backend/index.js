@@ -75,6 +75,7 @@ async function run() {
     };
     // Creating new user
     app.post("/new-user", async (req, res) => {
+      //console.log(req.body)
       const newUser = req.body;
       const result = await userCollection.insertOne(newUser);
       res.status(200).json({

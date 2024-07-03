@@ -22,6 +22,11 @@ import MyClass from "../Pages/Instructor/MyClass";
 import ApprovedClass from "../Pages/Instructor/ApprovedClass";
 import PendingClass from "../Pages/Instructor/PendingClass";
 import UpdateClass from "../Pages/Instructor/UpdateClass";
+import AdminHome from "../Pages/DashBoard/Admin/AdminHome";
+import ManageUser from "../Pages/DashBoard/Admin/ManageUser";
+import ManageClasses from "../Pages/DashBoard/Admin/ManageClasses";
+import Application from "../Pages/DashBoard/Admin/Application";
+import UpdateUser from "../Pages/DashBoard/Admin/UpdateUser";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -102,27 +107,63 @@ export const router = createBrowserRouter([
         element: <CourseDetails />,
       },
       {
-        path:"instructor-cp",
-        element:<InstructorCp/>
-      },{
-        path:"add-class",
-        element:<AddClass/>
-      },{
-        path:"my-classes",
-        element:<MyClass/>
-      },{
-        path:"my-approved",
-        element:<ApprovedClass/>
-      },{
-        path:"my-pending",
-        element:<PendingClass/>
-      },{
-        path:"update/:id",
-        element:<UpdateClass/>,
+        path: "instructor-cp",
+        element: <InstructorCp />,
+      },
+      {
+        path: "add-class",
+        element: <AddClass />,
+      },
+      {
+        path: "my-classes",
+        element: <MyClass />,
+      },
+      {
+        path: "my-approved",
+        element: <ApprovedClass />,
+      },
+      {
+        path: "my-pending",
+        element: <PendingClass />,
+      },
+      {
+        path: "update/:id",
+        element: <UpdateClass />,
         loader: async ({ params }) => {
           try {
             const response = await axios.get(
               `http://localhost:3000/classes/id/${params.id}`
+            );
+            return response.data;
+          } catch (error) {
+            console.error("Error fetching class details:", error);
+            throw error;
+          }
+        },
+      },
+      {
+        path: "admin-home",
+        element: <AdminHome />,
+      },
+      {
+        path: "manage-users",
+        element: <ManageUser />,
+      },
+      {
+        path: "manage-class",
+        element: <ManageClasses />,
+      },
+      {
+        path: "manage-application",
+        element: <Application />,
+      },
+      {
+        path:"update-user/:id",
+        element:<UpdateUser/>,
+        loader: async ({ params }) => {
+          try {
+            const response = await axios.get(
+              `http://localhost:3000/user/id/${params.id}`
             );
             return response.data;
           } catch (error) {
